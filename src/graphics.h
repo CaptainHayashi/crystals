@@ -1,5 +1,5 @@
 /*
- * Crystals (working title) 
+ * Crystals (working title)
  *
  * Copyright (c) 2010 Matt Windsor, Michael Walker and Alexander
  *                    Preisinger.
@@ -49,46 +49,51 @@
 
 /* -- TYPEDEFS -- */
 
-typedef void image_t;         /**< Generic image data type. */
-typedef uint8_t alignment_t;  /**< Text alignment modifier type. */
+typedef void image_t;	      /**< Generic image data type. */
 
 
 /* -- CONSTANTS -- */
 
+typedef enum alignment
+{
+  ALIGN_LEFT,	   /**< Left alignment for text. */
+  ALIGN_CENTRE,	   /**< Centre alignment for text. */
+  ALIGN_RIGHT	   /**< Right alignment for text. */
+} alignment_t;
+
+
 enum
-  {
-    ALIGN_LEFT   = 0,   /**< Left alignment for text. */
-    ALIGN_CENTRE = 1,   /**< Centre alignment for text. */
-    ALIGN_RIGHT  = 2,   /**< Right alignment for text. */
-
-    SCREEN_W     = 640, /**<
-                         * Width of the screen (in pixels).
-                         *
-                         * @todo FIXME: Make this changeable at runtime.
-                         */
-
-    SCREEN_H     = 480, /**<
-                         * Height of the screen (in pixels).
-                         *
-                         * @todo FIXME: Make this changeable at runtime.
-                         */
-
-    SCREEN_D     = 32   /**< Screen colour depth (in bits per pixel). */
-  };
+{
+  SCREEN_D = 32		/**< Screen colour depth (in bits per pixel). */
+};
 
 
-extern const char DEFGFXPATH[];     /**<
-                                     * Default root path for graphics,
-                                     * to be invoked if the root path
-                                     * cannot be found in the
-                                     * configuration file.
-                                     */
+/**
+ * Width of the screen, in pixels.
+ *
+ * @todo FIXME: Make this changeable at runtime.
+ */
+extern const uint16_t SCREEN_W;
 
-extern const char FONT_FILENAME[];  /**< Filename of the default font. */
 
-extern const uint16_t FONT_W;        /**< Font character width, in pixels. */
+/**
+ * Height of the screen, in pixels.
+ *
+ * @todo FIXME: Make this changeable at runtime.
+ */
+extern const uint16_t SCREEN_H;
 
-extern const uint16_t FONT_H;        /**< Font character height, in pixels. */
+
+/**
+ * Font character width, in pixels.
+ */
+extern const uint16_t FONT_W;
+
+
+/**
+ * Font character height, in pixels.
+ */
+extern const uint16_t FONT_H;
 
 
 /* -- DECLARATIONS -- */
@@ -96,8 +101,7 @@ extern const uint16_t FONT_H;        /**< Font character height, in pixels. */
 /**
  * Initialise the graphics subsystem.
  */
-void
-init_graphics (void);
+void init_graphics (void);
 
 
 /**
@@ -110,14 +114,14 @@ init_graphics (void);
  * @return      The absolute path to the image file, for example
  *              "/usr/share/crystals/gfx/bob.png".
  */
-char *
-get_absolute_path (const char path[]);
+char *get_absolute_path (const char path[]);
 
 
 /**
- * Writes a string on the screen, using the standard font.
+ * Writes a string on the screen, using the standard font and the
+ * given alignment.
  *
- * A wrapper to the image drawing functions that allows text to be
+ * A wrapper to the standard writing function that allows text to be
  * left, centre, or right-aligned on a line of length box_width
  * starting at (x, y).
  *
@@ -132,12 +136,25 @@ get_absolute_path (const char path[]);
  *                   ALIGN_RIGHT).
  * @param string     The string to write.
  */
-void
-write_string (int16_t x,
-              int16_t y,
-              uint16_t box_width,
-              alignment_t alignment,
-              const char string[]);
+void write_string_aligned (int16_t x,
+                           int16_t y,
+                           uint16_t box_width,
+                           alignment_t alignment,
+                           const char string[]);
+
+
+/**
+ * Writes a string on the screen, using the standard font.
+ *
+ * @param x          X position of the left edge of the text box,
+ *                   in pixels from the left edge of the screen.
+ * @param y          Y position of the top edge of the text box,
+ *                   in pixels from the top edge of the screen.
+ * @param string     The string to write.
+ */
+void write_string (int16_t x,
+		   int16_t y,
+		   const char string[]);
 
 
 /**
@@ -145,7 +162,7 @@ write_string (int16_t x,
  *
  * Depending on the graphics module, the colour displayed on screen
  * may not exactly match the desired colour.
- * 
+ *
  * @param x      X position of the left edge of the rectangle,
  *               in pixels from the left edge of the screen.
  * @param y      Y position of the top edge of the rectangle,
@@ -155,17 +172,12 @@ write_string (int16_t x,
  * @param red    The red component of the fill colour (0-255).
  * @param green  The green component of the fill colour (0-255).
  * @param blue   The blue component of the fill colour (0-255).
- *
- * @return       SUCCESS for success; FAILURE otherwise.
  */
-bool_t
-draw_rectangle (int16_t x,
-                int16_t y,
-                uint16_t width,
-                uint16_t height,
-                uint8_t red,
-                uint8_t green,
-                uint8_t blue);
+void draw_rectangle (int16_t x,
+		     int16_t y,
+		     uint16_t width,
+		     uint16_t height,
+		     uint8_t red, uint8_t green, uint8_t blue);
 
 
 /**
@@ -177,11 +189,8 @@ draw_rectangle (int16_t x,
  * @param red    The red component of the fill colour (0-255).
  * @param green  The green component of the fill colour (0-255).
  * @param blue   The blue component of the fill colour (0-255).
- *
- * @return       SUCCESS for success; FAILURE otherwise.
  */
-bool_t
-fill_screen (uint8_t red, uint8_t green, uint8_t blue);
+void fill_screen (uint8_t red, uint8_t green, uint8_t blue);
 
 
 /**
@@ -189,14 +198,10 @@ fill_screen (uint8_t red, uint8_t green, uint8_t blue);
  *
  * @param x_offset  The X co-ordinate offset in which to scroll the
  *                  screen, in pixels towards the right.
- *
  * @param y_offset  The Y co-ordinate offset in which to scroll the
  *                  screen, in pixels downwards.
- *
- * @return          SUCCESS for success; FAILURE otherwise.
  */
-bool_t
-scroll_screen (int16_t x_offset, int16_t y_offset);
+void scroll_screen (int16_t x_offset, int16_t y_offset);
 
 
 /**
@@ -211,7 +216,7 @@ scroll_screen (int16_t x_offset, int16_t y_offset);
  * @note            It is safe to directly use the pointer returned,
  *                  for example as an argument to draw_image_direct,
  *                  so long as the image is known to still be loaded.
- *                  This can be used to speed up successive drawing 
+ *                  This can be used to speed up successive drawing
  *                  calls after an image load check.
  *
  * @param filename  The filename of the image to load, relative from
@@ -221,8 +226,7 @@ scroll_screen (int16_t x_offset, int16_t y_offset);
  *          successfully loaded and stored in the image cache;
  *          NULL otherwise.
  */
-image_t *
-load_image (const char filename[]);
+image_t *load_image (const char filename[]);
 
 
 /**
@@ -233,8 +237,7 @@ load_image (const char filename[]);
  *
  * @param image  Pointer to the image data to free.
  */
-void
-free_image (image_t *image);
+void free_image (image_t * image);
 
 
 /**
@@ -259,18 +262,15 @@ free_image (image_t *image);
  * @param width     The width of the rectangle, in pixels.
  * @param height    The height of the rectangle, in pixels.
  *
- * @return          SUCCESS for success, FAILURE otherwise.  In most
+ * @return          true for success, false otherwise.  In most
  *                  cases, a failure will simply cause the image to
  *                  not appear.
  */
-bool_t
-draw_image (const char filename[],
-            int16_t image_x,
-            int16_t image_y,
-            int16_t screen_x,
-            int16_t screen_y,
-            uint16_t width,
-            uint16_t height);
+void draw_image (const char filename[],
+		 int16_t image_x,
+		 int16_t image_y,
+		 int16_t screen_x,
+		 int16_t screen_y, uint16_t width, uint16_t height);
 
 
 /**
@@ -293,18 +293,16 @@ draw_image (const char filename[],
  * @param width     The width of the rectangle, in pixels.
  * @param height    The height of the rectangle, in pixels. *
  *
- * @return          SUCCESS for success, FAILURE otherwise. In most
+ * @return          true for success, false otherwise. In most
  *                  cases, a failure will simply cause the image to
  *                  not appear.
  */
-bool_t
-draw_image_direct (image_t *data,
-                   int16_t image_x,
-                   int16_t image_y,
-                   int16_t screen_x,
-                   int16_t screen_y,
-                   uint16_t width,
-                   uint16_t height);
+void draw_image_direct (image_t * data,
+			int16_t image_x,
+			int16_t image_y,
+			int16_t screen_x,
+			int16_t screen_y,
+			uint16_t width, uint16_t height);
 
 
 /**
@@ -312,18 +310,16 @@ draw_image_direct (image_t *data,
  *
  * @param filename  Filename of the image.
  *
- * @return          SUCCESS if the deletion succeeded; 
- *                  FAILURE otherwise.
+ * @return          true if the deletion succeeded;
+ *                  false otherwise.
  */
-bool_t
-delete_image (const char filename[]);
+bool delete_image (const char filename[]);
 
 
 /**
  * Deletes all images in the image cache.
  */
-void
-clear_images (void);
+void clear_images (void);
 
 
 /**
@@ -331,16 +327,15 @@ clear_images (void);
  *
  * @param filename  The filename of the image to retrieve.
  *
- * @return          A pointer to the image if found, 
+ * @return          A pointer to the image if found,
  *                  or NULL otherwise.
  */
-image_t *
-find_image (const char filename[]);
+image_t *find_image (const char filename[]);
 
 
 /**
  * Adds a rectangle to the next update run.
- * 
+ *
  * @param x       The X co-ordinate of the left side of the rectangle,
  *                in pixels from the left side of the screen.
  * @param y       The Y co-ordinate of the top side of the rectangle,
@@ -348,27 +343,23 @@ find_image (const char filename[]);
  * @param width   The width of the rectangle, in pixels.
  * @param height  The height of the rectangle, in pixels.
  */
-void
-add_update_rectangle (uint16_t x,
-                      uint16_t y,
-                      int16_t width,
-                      int16_t height);
+void add_update_rectangle (int16_t x,
+			   int16_t y,
+			   uint16_t width, uint16_t height);
 
 
 /**
  * Updates the screen.
  *
- * @return  SUCCESS for success, FAILURE otherwise.
+ * @param useconds  Elapsed microseconds in the frame.
  */
-bool_t
-update_screen (void);
+void update_screen (uint32_t useconds);
 
 
 /**
  * Cleans up the graphics subsystem.
  */
-void
-cleanup_graphics (void);
+void cleanup_graphics (void);
 
 
 #endif /* not _GRAPHICS_H */

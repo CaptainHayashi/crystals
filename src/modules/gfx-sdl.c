@@ -1,5 +1,5 @@
 /*
- * Crystals (working title) 
+ * Crystals (working title)
  *
  * Copyright (c) 2010 Matt Windsor, Michael Walker and Alexander
  *                    Preisinger.
@@ -45,8 +45,8 @@
 
 #include "module.h"
 
-#include <SDL.h>
-#include <SDL_image.h>
+#include <SDL/SDL.h>
+#include <SDL/SDL_image.h>
 
 #include "gfx-module.h" /* Module header file. */
 
@@ -60,13 +60,12 @@ static SDL_Surface *sg_screen; /**< The main screen surface. */
 static SDL_Surface *sg_shadow; /**< The screen surface everything is
                                  * drawn onto. */
 
-static GSList *sg_blit_stack; /**< The stack of rectangles to 
+static GSList *sg_blit_stack; /**< The stack of rectangles to
                                  update on the screen. */
 
-static bool_t sg_update_full_screen; /**< If true then the entire 
-                                      * screen must be flipped on the
-                                      * next frame.
-                                      */ 
+static bool sg_update_full_screen; /**< If true then the entire
+                                      screen must be flipped on the
+                                      next frame. */
 
 static void
 update_rect_internal (void *rect, void *ignore);
@@ -75,22 +74,20 @@ update_rect_internal (void *rect, void *ignore);
 /* -- DEFINITIONS -- */
 
 /* Initialises the module. */
-
-EXPORT bool_t
+EXPORT bool
 init (void)
 {
   sg_screen = NULL;
   sg_shadow = NULL;
   sg_blit_stack = NULL;
-  sg_update_full_screen = FALSE;
+  sg_update_full_screen = false;
 
-  return SUCCESS;
+  return true;
 }
 
 
 /* Terminates the module, freeing any remaining data dynamically
    allocated by the module. */
-
 EXPORT void
 term (void)
 {
@@ -106,51 +103,44 @@ term (void)
           g_slist_free_full (sg_blit_stack, free);
           sg_blit_stack = NULL;
         }
-      
+
       SDL_Quit ();
     }
 }
 
 
 /* Initialises a screen of a given width, height and depth. */
-
-EXPORT bool_t
+EXPORT bool
 init_screen_internal (uint16_t width, uint16_t height, uint8_t depth)
 {
   if (SDL_Init (SDL_INIT_VIDEO) != 0)
     {
       g_critical ("Could not initialise SDL");
-      return FAILURE;
+      return false;
     }
 
-
    sg_screen = SDL_SetVideoMode (width, height, depth, SDL_HWSURFACE);
-
    if (sg_screen == NULL)
      {
        g_critical ("Could not init screen.");
        SDL_Quit ();
-       return FAILURE;
+       return false;
      }
 
-
    sg_shadow = SDL_DisplayFormat (sg_screen);
-
    if (sg_shadow == NULL)
      {
        g_critical ("Could not make shadowbuf.");
        SDL_Quit ();
-       return FAILURE;
+       return false;
      }
 
-
-  return SUCCESS;
+  return true;
 }
 
 
 /* Draws a rectangle of colour on-screen. */
-
-EXPORT bool_t
+EXPORT void
 draw_rect_internal (int16_t x,
                     int16_t y,
                     uint16_t width,
@@ -161,7 +151,6 @@ draw_rect_internal (int16_t x,
 {
   SDL_Rect rect;
 
-
   rect.x = x;
   rect.y = y;
   rect.w = width;
@@ -169,8 +158,6 @@ draw_rect_internal (int16_t x,
 
   SDL_FillRect (sg_shadow, &rect, SDL_MapRGB (sg_screen->format,
                                               red, green, blue));
-
-  return SUCCESS;
 }
 
 
@@ -178,12 +165,10 @@ draw_rect_internal (int16_t x,
 
 EXPORT void *
 load_image_data (const char filename[])
-{ 
+{
   SDL_Surface *surface;
 
-
   surface = IMG_Load (filename);
-
   if (surface == NULL)
     {
       g_critical ("Couldn't load %s!", filename);
@@ -194,20 +179,16 @@ load_image_data (const char filename[])
 
 
 /* Frees image data retrieved by load_image_data. */
-
-EXPORT bool_t
+EXPORT void
 free_image_data (void *data)
 {
   if (data)
     SDL_FreeSurface(data);
-
-  return SUCCESS;
 }
 
 
 /* Draws a rectangular portion of an image on-screen. */
-
-EXPORT bool_t
+EXPORT void
 draw_image_internal (void *image,
                      int16_t image_x,
                      int16_t image_y,
@@ -219,15 +200,8 @@ draw_image_internal (void *image,
   SDL_Rect srcrect, destrect;
   SDL_Surface *ptex;
 
-
   ptex = (SDL_Surface*) image;
-
-  if (ptex == NULL)
-    {
-      g_critical ("Image data is NULL.");
-      return FAILURE;
-    }
-
+  g_assert (ptex != NULL);
 
   srcrect.x = image_x;
   srcrect.y = image_y;
@@ -239,21 +213,18 @@ draw_image_internal (void *image,
   srcrect.h = destrect.h = height;
 
   SDL_BlitSurface (ptex, &srcrect, sg_shadow, &destrect);
-
-  return SUCCESS;
 }
 
 
 /* Adds a rectangle to the next update run. */
-
 EXPORT void
-add_update_rectangle_internal (uint16_t x,
-                               uint16_t y,
-                               int16_t width,
-                               int16_t height)
+add_update_rectangle_internal (int16_t x,
+                               int16_t y,
+                               uint16_t width,
+                               uint16_t height)
 {
   SDL_Rect *rect;
-  
+
   rect = calloc (1, sizeof (SDL_Rect));
   if (rect == NULL)
     {
@@ -264,21 +235,20 @@ add_update_rectangle_internal (uint16_t x,
   rect->y = y;
   rect->w = width;
   rect->h = height;
-  
+
   sg_blit_stack = g_slist_prepend (sg_blit_stack, rect);
 }
 
 
 /* Updates the screen. */
-
-EXPORT bool_t
+EXPORT void
 update_screen_internal (void)
 {
   g_slist_foreach (sg_blit_stack, update_rect_internal, NULL);
-  
+
   if (sg_update_full_screen)
     {
-      sg_update_full_screen = FALSE;
+      sg_update_full_screen = false;
       SDL_Flip (sg_screen);
     }
   else
@@ -288,7 +258,7 @@ update_screen_internal (void)
       void *current;
       int i;
       int len;
-      
+
       len = g_slist_length (sg_blit_stack);
       rectlist = calloc (len, sizeof (SDL_Rect));
       for (i = 0; i < len; i += 1)
@@ -298,26 +268,23 @@ update_screen_internal (void)
                   current,
                   sizeof (SDL_Rect));
         }
-      
+
       SDL_UpdateRects (sg_screen, len, rectlist);
-      
+
       free (rectlist);
     }
-  
+
   g_slist_free_full (sg_blit_stack, free);
   sg_blit_stack = NULL;
-  
-  SDL_Delay (15); /* TODO: remove <-- */
 
-  return SUCCESS;
+  SDL_Delay (1); /* TODO: remove <-- */
 }
 
 
 /* Updates one rectangle. */
-
 static void
 update_rect_internal (void *rect, void *ignore)
-{ 
+{
   SDL_Rect *rectc = (SDL_Rect *) rect;
   SDL_BlitSurface (sg_shadow, rectc, sg_screen, rectc);
 
@@ -326,14 +293,12 @@ update_rect_internal (void *rect, void *ignore)
 
 
 /* Translates the screen by a co-ordinate pair, leaving damage. */
-
-EXPORT bool_t
+EXPORT void
 scroll_screen_internal (int16_t x_offset, int16_t y_offset)
 {
   SDL_Rect source, dest;
 
-
-  /* These are all temporary variables, which are 
+  /* These are all temporary variables, which are
    * used for boundary-checking before populating the SDL rects.
    */
 
@@ -376,7 +341,6 @@ scroll_screen_internal (int16_t x_offset, int16_t y_offset)
 
 
   /* Now check for overflows. */
-
   if (source_x > SHRT_MAX
       || source_y > SHRT_MAX
       || dest_x > SHRT_MAX
@@ -387,7 +351,6 @@ scroll_screen_internal (int16_t x_offset, int16_t y_offset)
       || dest_y < SHRT_MIN)
     {
       g_critical ("Coordinate overflow when scrolling.");
-      return FAILURE;
     }
 
 
@@ -397,12 +360,10 @@ scroll_screen_internal (int16_t x_offset, int16_t y_offset)
       || source_height < 0)
     {
       g_critical ("Dimension overflow when scrolling.");
-      return FAILURE;
     }
 
 
   /* Convert down. */
-
   source.x = (int16_t) source_x;
   source.y = (int16_t) source_y;
   dest.x   = (int16_t) dest_x;
@@ -414,8 +375,5 @@ scroll_screen_internal (int16_t x_offset, int16_t y_offset)
   SDL_BlitSurface (sg_screen, &source, sg_shadow, &dest);
   /* The whole screen now needs updating! */
   SDL_BlitSurface (sg_shadow, NULL, sg_screen, NULL);
-  sg_update_full_screen = TRUE;
-
-
-  return SUCCESS;
+  sg_update_full_screen = true;
 }

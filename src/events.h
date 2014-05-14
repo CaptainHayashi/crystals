@@ -42,7 +42,6 @@
  * @brief    Prototypes and declarations for generic events system.
  */
 
-
 #ifndef _EVENTS_H
 #define _EVENTS_H
 
@@ -209,10 +208,12 @@ void
 init_events (void);
 
 
-/** Process any events queued in the events driver. */
-
-void
-process_events (void);
+/**
+ * Process any events queued in the events driver.
+ *
+ * @param useconds  Elapsed microseconds.
+ */
+void process_events (uint32_t useconds);
 
 
 /**

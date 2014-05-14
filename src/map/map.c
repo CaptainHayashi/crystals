@@ -1,7 +1,7 @@
 /*
- * Crystals (working title) 
+ * Crystals (working title)
  *
- * Copyright (c) 2010 Matt Windsor, Michael Walker and Alexander
+ * Copyright (c) 2010, 2011 Matt Windsor, Michael Walker and Alexander
  *                    Preisinger.
  *
  * All rights reserved.
@@ -36,72 +36,79 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** @file    src/field/map.c
- *  @author  Matt Windsor
- *  @brief   Low-level map handling functions.
+/**
+ * @file    src/field/map.c
+ * @author  Matt Windsor
+ * @brief   Low-level map handling functions.
  */
 
 
 #include "../crystals.h"
 
 
-const char FN_TILESET[] = "tiles.png";
-
 /* -- STATIC DEFINITIONS -- */
 
 /**
- * Allocate arrays to contain layer planes in the map.
+ * Allocates arrays to contain layer planes in the map.
  *
  * @param map  The map to populate.
  */
-static void
-allocate_plane_arrays (map_t *map);
+static void allocate_plane_arrays (map_t *map);
 
 
 /**
- * Allocate arrays to contain layer planes in the map.
+ * Allocates arrays to contain layer planes in the map.
  *
  * @param map  The map to populate.
  */
-static void
-allocate_planes (map_t *map);
+static void allocate_planes (map_t *map);
+
+
+/**
+ * Frees the map planes.
+ *
+ * @param max_layer_index  The maximum layer index in the map.
+ * @param value_planes     The array of layer value planes.
+ * @param zone_planes      The array of layer zone planes.
+ */
+static void free_planes (layer_index_t max_layer_index,
+			 layer_value_t **value_planes,
+			 layer_zone_t ** zone_planes);
 
 
 /* -- DECLARATIONS -- */
 
-/* Initialise a map. */
-void
-init_map (map_t *map,
-          dimension_t width,
-          dimension_t height,
-          layer_index_t max_layer_index,
-          zone_index_t max_zone_index)
+/* Allocates and initialises a map. */
+map_t *
+init_map (dimension_t width,
+	  dimension_t height,
+	  layer_index_t max_layer_index, zone_index_t max_zone_index)
 {
+  map_t *map;
+
   g_assert (width > 0 && height > 0);
 
-  /* Set parameters and nullify pointers. */
+  map = xcalloc (1, sizeof (map_t));
 
+  /* Set parameters and nullify pointers. */
   map->width = width;
   map->height = height;
   map->max_layer_index = max_layer_index;
   map->max_zone_index = max_zone_index;
 
-  map->layer_tags = NULL;
-  map->zone_properties = NULL;
-  map->value_planes = NULL;
-  map->zone_planes = NULL;
-
 
   /* Allocate tag array. */
-
-  map->layer_tags = xcalloc ((size_t) max_layer_index + 1, sizeof (layer_tag_t));
+  map->layer_tags =
+    xcalloc ((size_t) max_layer_index + 1, sizeof (layer_tag_t));
 
   /* Allocate properties array. */
-
-  map->zone_properties = xcalloc ((size_t) max_zone_index + 1, sizeof (zone_prop_t));
+  map->zone_properties =
+    xcalloc ((size_t) max_zone_index + 1, sizeof (zone_prop_t));
 
   allocate_plane_arrays (map);
   allocate_planes (map);
+
+  return map;
 }
 
 
@@ -112,10 +119,10 @@ static void
 allocate_plane_arrays (map_t *map)
 {
   map->value_planes = xcalloc ((size_t) map->max_layer_index + 1,
-                              sizeof (layer_value_t *));
+			       sizeof (layer_value_t *));
 
   map->zone_planes = xcalloc ((size_t) map->max_layer_index + 1,
-                             sizeof (layer_zone_t *));
+			      sizeof (layer_zone_t *));
 }
 
 
@@ -123,20 +130,21 @@ allocate_plane_arrays (map_t *map)
 static void
 allocate_planes (map_t *map)
 {
-  int i;
+  layer_index_t i;
   for (i = 0; i <= map->max_layer_index; i++)
     {
-      map->value_planes[i] = xcalloc ((size_t) map->width * map->height,
-                                     sizeof (layer_value_t));
+      map->value_planes[i] =
+	xcalloc ((size_t) map->width * map->height,
+		 sizeof (layer_value_t));
 
-      map->zone_planes[i] = xcalloc ((size_t) map->width * map->height,
-                                    sizeof (layer_zone_t));
+      map->zone_planes[i] =
+	xcalloc ((size_t) map->width * map->height,
+		 sizeof (layer_zone_t));
     }
 }
 
 
 /* Get the tag associated with a layer. */
-
 layer_tag_t
 get_layer_tag (map_t *map, layer_index_t layer)
 {
@@ -149,7 +157,6 @@ get_layer_tag (map_t *map, layer_index_t layer)
 
 
 /* Set the tag value of a layer. */
-
 void
 set_layer_tag (map_t *map, layer_index_t layer, layer_tag_t tag)
 {
@@ -161,9 +168,9 @@ set_layer_tag (map_t *map, layer_index_t layer, layer_tag_t tag)
 
 
 /* Set the property bitfield of a zone. */
-
 void
-set_zone_properties (map_t *map, zone_index_t zone, zone_prop_t properties)
+set_zone_properties (map_t *map, zone_index_t zone,
+		     zone_prop_t properties)
 {
   g_assert (map != NULL);
   g_assert (zone <= map->max_zone_index);
@@ -171,11 +178,12 @@ set_zone_properties (map_t *map, zone_index_t zone, zone_prop_t properties)
   map->zone_properties[zone] = properties;
 }
 
-/* Set the value of a tile. */
 
+/* Set the value of a tile. */
 void
-set_tile_value (map_t *map, layer_index_t layer,
-                dimension_t x, dimension_t y, layer_value_t value)
+set_tile_value (map_t *map,
+		layer_index_t layer,
+		dimension_t x, dimension_t y, layer_value_t value)
 {
   g_assert (map != NULL);
   g_assert (layer <= map->max_layer_index);
@@ -186,10 +194,10 @@ set_tile_value (map_t *map, layer_index_t layer,
 
 
 /* Set the zone of a tile. */
-
 void
-set_tile_zone (map_t *map, layer_index_t layer,
-               dimension_t x, dimension_t y, layer_zone_t zone)
+set_tile_zone (map_t *map,
+	       layer_index_t layer,
+	       dimension_t x, dimension_t y, layer_zone_t zone)
 {
   g_assert (map != NULL);
   g_assert (layer <= map->max_layer_index);
@@ -201,7 +209,6 @@ set_tile_zone (map_t *map, layer_index_t layer,
 
 
 /* Get the width of a map, in tiles. */
-
 dimension_t
 get_map_width (map_t *map)
 {
@@ -212,7 +219,6 @@ get_map_width (map_t *map)
 
 
 /* Get the height of a map, in tiles. */
-
 dimension_t
 get_map_height (map_t *map)
 {
@@ -223,14 +229,11 @@ get_map_height (map_t *map)
 
 
 /* Get the highest tag number allocated on a map. */
-
-
 layer_tag_t
 get_max_tag (map_t *map)
 {
   layer_index_t l;
   layer_tag_t result;
-
 
   g_assert (map != NULL);
 
@@ -239,7 +242,7 @@ get_max_tag (map_t *map)
   for (l = 0; l <= map->max_layer_index; l++)
     {
       if (get_layer_tag (map, l) > result)
-        result = get_layer_tag (map, l);
+	result = get_layer_tag (map, l);
     }
 
   return result;
@@ -247,7 +250,6 @@ get_max_tag (map_t *map)
 
 
 /* Get the highest layer index allocated on a map. */
-
 layer_index_t
 get_max_layer (map_t *map)
 {
@@ -258,7 +260,6 @@ get_max_layer (map_t *map)
 
 
 /* Get the highest zone index allocated on a map. */
-
 zone_index_t
 get_max_zone (map_t *map)
 {
@@ -268,45 +269,48 @@ get_max_zone (map_t *map)
 }
 
 
-/* De-initialise a map. */
-
+/* Frees a map. */
 void
 free_map (map_t *map)
 {
-  unsigned int i;
-  
   if (map)
     {
       if (map->layer_tags)
-        free (map->layer_tags);
+	{
+	  free (map->layer_tags);
+	}
 
       if (map->zone_properties)
-        free (map->zone_properties);
+	{
+	  free (map->zone_properties);
+	}
 
-      /* Make sure to clean up all the data planes. */
-
-      if (map->value_planes)
-        {
-          for (i = 0; i <= map->max_layer_index; i++)
-            {
-              if (map->value_planes[i])
-                free (map->value_planes[i]);
-            }
-
-          free (map->value_planes);
-        }
-
-      if (map->zone_planes)
-        {
-          for (i = 0; i <= map->max_layer_index; i++)
-            {
-              if (map->zone_planes[i])
-                free (map->zone_planes[i]);
-            }
-
-          free (map->zone_planes);
-        }
+      free_planes (map->max_layer_index, map->value_planes,
+		   map->zone_planes);
 
       free (map);
     }
+}
+
+
+/* Frees the map planes. */
+static void
+free_planes (layer_index_t max_layer_index,
+	     layer_value_t **value_planes,
+	     layer_zone_t ** zone_planes)
+{
+  layer_index_t i;
+
+  for (i = 0; i <= max_layer_index; i += 1)
+    {
+      if (value_planes != NULL && value_planes[i] != NULL)
+        free (value_planes[i]);
+      if (zone_planes != NULL && zone_planes[i] != NULL)
+        free (zone_planes[i]);
+    }
+
+  if (value_planes != NULL)
+    free (value_planes);
+  if (zone_planes != NULL)
+    free (zone_planes);
 }

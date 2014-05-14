@@ -1,7 +1,7 @@
 /*
  * Crystals (working title)
  *
- * Copyright (c) 2010 Matt Windsor, Michael Walker and Alexander
+ * Copyright (c) 2010, 2011 Matt Windsor, Michael Walker and Alexander
  *                    Preisinger.
  *
  * All rights reserved.
@@ -36,7 +36,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** 
+/**
  * @file     src/field/field.c
  * @author   Matt Windsor
  * @brief    Field state.
@@ -58,6 +58,29 @@ static unsigned char sg_field_held_special_keys[256];
 static event_callback_t *sg_field_skeyupcb;
 static event_callback_t *sg_field_skeydowncb;
 static event_callback_t *sg_field_quitcb;
+
+
+/* -- STATIC DECLARATIONS -- */
+
+/**
+ * Initialises input callbacks.
+ */
+static void
+field_init_callbacks (void);
+
+
+/**
+ * De-initialises input callbacks.
+ */
+static void
+field_cleanup_callbacks (void);
+
+
+/**
+ * Checks to see if certain keys are held and handles the results.
+ */
+static void
+field_handle_held_keys (void);
 
 
 /* -- DEFINITIONS -- */
@@ -118,17 +141,17 @@ init_field (struct state_functions *function_table)
   add_object ("Player", "null");
   add_object ("Test1", "null");
   add_object ("Test2", "null");
-  
+
   tag_object ("Player", 1);
   tag_object ("Test1", 2);
   tag_object ("Test2", 1);
-  
+
   change_object_image ("Player", "testobj.png", 32, 0, 48, 48);
   change_object_image ("Test1", "testobj.png", 0, 0, 16, 48);
   change_object_image ("Test2", "testobj.png", 16, 0, 16, 48);
-  
+
   focus_camera_on_object ("Player");
-  
+
   position_object ("Player",  200, 200, BOTTOM_LEFT);
   position_object ("Test1", 100, 100, BOTTOM_LEFT);
   position_object ("Test2", 90, 90, BOTTOM_LEFT);
@@ -142,7 +165,6 @@ init_field (struct state_functions *function_table)
 
 
 /* Retrieve the map view currently in use. */
-
 mapview_t *
 get_field_mapview (void)
 {
@@ -151,15 +173,12 @@ get_field_mapview (void)
 
 
 /* Retrieve the boundaries of the map currently in use. */
-
 void
 get_field_map_boundaries (int *x0_pointer,
                           int *y0_pointer,
                           int *x1_pointer,
                           int *y1_pointer)
 {
-  /* Sanity-check pointers. */
-
   g_assert (x0_pointer != NULL
             && x1_pointer != NULL
             && y0_pointer != NULL
@@ -173,32 +192,22 @@ get_field_map_boundaries (int *x0_pointer,
 
 
 /* Check to see if certain keys are held and handle the results. */
-
-void
+static void
 field_handle_held_keys (void)
 {
   if (sg_field_held_special_keys[SK_UP])
-    {
-      move_object ("Player", 0, -1);
-    }
+    move_object ("Player", 0, -1);
   else if (sg_field_held_special_keys[SK_RIGHT])
-    {
-      move_object ("Player", 1, 0);
-    }
+    move_object ("Player", 1, 0);
   else if (sg_field_held_special_keys[SK_DOWN])
-    {
-      move_object ("Player", 0, 1);
-    }
+    move_object ("Player", 0, 1);
   else if (sg_field_held_special_keys[SK_LEFT])
-    {
-      move_object ("Player", -1, 0);
-    }
+    move_object ("Player", -1, 0);
 }
 
 
 /* Initialise input callbacks. */
-
-void
+static void
 field_init_callbacks (void)
 {
   sg_field_skeyupcb = install_callback (field_on_special_key_up, SPECIAL_KEY_UP_EVENT);
@@ -212,17 +221,16 @@ field_init_callbacks (void)
 
 
 /* De-initialise input callbacks. */
-
-void
+static void
 field_cleanup_callbacks (void)
-{ 
-  if (sg_field_skeyupcb)
+{
+  if (sg_field_skeyupcb != NULL)
     unload_callback (sg_field_skeyupcb);
 
-  if (sg_field_skeydowncb)
+  if (sg_field_skeydowncb != NULL)
     unload_callback (sg_field_skeydowncb);
 
-  if (sg_field_quitcb)
+  if (sg_field_quitcb != NULL)
     unload_callback (sg_field_quitcb);
 
   sg_field_skeyupcb = sg_field_skeydowncb = sg_field_quitcb = NULL;
@@ -230,32 +238,50 @@ field_cleanup_callbacks (void)
 
 
 /* Perform per-frame updates for field. */
-
 void
-update_field (void)
+update_field (uint32_t delta)
 {
+  static uint32_t total_useconds;
+
+  total_useconds += delta;
+
   field_handle_held_keys ();
-  render_map (sg_mapview);
-  write_string (5, 5, 0, ALIGN_LEFT, "Test");
+
+  if (total_useconds >= USECONDS_PER_FRAME)
+    {
+      gchar *fps_indication;
+
+      render_map (sg_mapview);
+
+      fps_indication = g_strdup_printf ("%05ufps",
+                                        (USECONDS_PER_SECOND
+                                         / total_useconds));
+      write_string (5, 5, fps_indication);
+      g_free (fps_indication);
+
+      write_string (5, SCREEN_H - FONT_H - 5, "Crystals");
+
+      total_useconds = 0;
+    }
 }
 
 
 /* Handle a dirty rectangle passed from the user interface overlay for
    field. */
-
 void
-field_handle_dirty_rect (short x, short y,
-                         unsigned short width, unsigned short height)
+field_handle_dirty_rect (int16_t x,
+                         int16_t y,
+                         uint16_t width,
+                         uint16_t height)
 {
   mark_dirty_rect (sg_mapview,
-                   x + sg_mapview->x_offset, 
+                   x + sg_mapview->x_offset,
                    y + sg_mapview->y_offset,
                    width, height);
 }
 
 
 /* De-initialise the field state. */
-
 void
 cleanup_field (void)
 {

@@ -36,106 +36,27 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file     src/main.c
- * @author   Matt Windsor
- * @brief    Main functions.
+/** @file    src/field/mapload.h
+ *  @author  Matt Windsor
+ *  @brief   Declarations and constants for map loader (ported from CrystalsMapEditor).
  */
 
-#include "crystals.h"
-
-
-/* -- CONSTANTS -- */
-
-const char *DEFAULT_CONFIG_PATH = "config/default.cfg";
-
-
-/* -- GLOBAL VARIABLES -- */
-
-dict_t *g_config = NULL;
+#ifndef _MAPLOAD_H
+#define _MAPLOAD_H
 
 
 /* -- DEFINITIONS -- */
 
-/* NB: For the Windows code entry point, see platform/w32-main.c. */
+/**
+ * Read a map from a file using the Crystals map format.
+ *
+ * The Crystals map format is detailed in the design document,
+ * "The Crystals Map Format", available with the Crystals source.
+ *
+ * @param path  The path to the file to open.
+ *
+ * @return      the new map_t, or NULL if an error occurred.
+ */
+map_t *load_map (const char path[]);
 
-/* The main function. */
-
-int
-main (int argc, char **argv)
-{
-  /* Placeholder for command line stuff. */
-
-  (void) argc;
-  (void) argv;
-
-  init ();
-  main_loop ();
-
-  cleanup ();
-  return 0;
-}
-
-
-/* Initialise all engine subsystems. */
-
-void
-init (void)
-{
-  char *module_path = NULL;
-
-
-  /* -- Configuration -- */
-
-  g_config = init_config (DEFAULT_CONFIG_PATH);
-
-  /* -- Module loader ("kernel") -- */
-
-  get_module_root_path (&module_path);
-
-  init_modules (module_path);
-  init_graphics ();
-  init_bindings ();
-  init_events ();
-  init_timer ();
-
-  set_state (STATE_FIELD);
-
-  run_script ("tests/lua.lua");
-}
-
-
-/* Execute the main loop of the program. */
-
-void
-main_loop (void)
-{
-  uint32_t delta;
-
-  while (update_state () != STATE_QUIT)
-    {
-      delta = timer_get_delta ();
-      state_frame_updates (delta);
-      update_screen (delta);
-      process_events (delta);
-    }
-}
-
-
-/* Clean up all initialised subsystems. */
-
-void
-cleanup (void)
-{
-  if (get_state () != STATE_QUIT)
-    cleanup_state ();
-
-  cleanup_events ();
-  cleanup_graphics ();
-  cleanup_bindings ();
-  cleanup_modules ();
-  cfg_free (g_config);
-}
-
-
-/* vim: set et ts=2 sw=2 softtabstop=2: */
+#endif /* not _MAPLOAD_H */

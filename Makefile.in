@@ -126,11 +126,11 @@ TESTS    := $(addprefix $(TESTDIR)/,$(TESTS))
 # The following object list represents the core of the engine 
 # and thus generally does not need altering by users.
 
-OBJ      := main.o graphics.o events.o
+OBJ      := main.o graphics.o events.o file.o timer.o
 OBJ      += util.o module.o optionparser.o parser.o state.o
-OBJ      += field/field.o 
-OBJ      += field/map.o field/mapview.o field/mapload.o
+OBJ      += field/field.o field/objectset.o
 OBJ      += field/object.o field/object-api.o field/object-image.o
+OBJ      += map/map.o map/mapview.o map/mapload.o map/maprender.o
 
 
 # Note: DO NOT add .so or .dll onto the end of module names!
@@ -195,7 +195,7 @@ DOC      := $(addprefix $(DOCDIR)/,$(DOC))
 
 # The compiler to use.
 
-CC       := gcc
+CC       := @CC@
 
 # The delete command.
 
@@ -225,9 +225,14 @@ WARN     := -Wall -Wextra -Wshadow -Wpointer-arith -Wcast-align \
 #		    -I/usr/include/ruby-1.9.1/i686-linux/
 #endif
 
+# Preprocessor defines from configure.
+
+DEFS := @DEFS@
+
 # Generic compilation flags.
 
-CFLAGS   := -ansi -pedantic -O2 -g3 -ggdb -DDEFMODPATH="\"$(MODPATH)\"" $(WARN)
+CFLAGS   := @CFLAGS@ @CPPFLAGS@  -ansi -pedantic -O2 -g3 -ggdb \
+	    -DDEFMODPATH="\"$(MODPATH)\"" ${DEFS} $(WARN)
 
 ## >> PLATFORM SPECIFICS << ##
 
@@ -256,12 +261,12 @@ ifeq ($(PLATFORM),windows-mingw32)
 	LIBS        += -L/usr/i486-mingw32/lib -lmingw32 -mwindows
 	DLLEXT      := dll
 	BINSUFFIX   := .exe
-	
+
 	# Add Windows-specific code
-	
+
 	OBJ         += $(PLATDIR)/w32-main.o $(PLATDIR)/w32-util.o
         OBJ         += $(PLATDIR)/w32-module.o
-	
+
 endif
 
 

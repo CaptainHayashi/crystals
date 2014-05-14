@@ -1,5 +1,5 @@
 /*
- * Crystals (working title) 
+ * Crystals (working title)
  *
  * Copyright (c) 2010 Matt Windsor, Michael Walker and Alexander
  *                    Preisinger.
@@ -46,18 +46,14 @@
 #ifndef _OBJECT_H
 #define _OBJECT_H
 
-/* -- TYPEDEFS -- */
-
-typedef uint8_t reference_t; /**< Reference constant type. */
-
 
 /* -- CONSTANTS -- */
 
-enum
-  {
-    TOP_LEFT = 0,   /**< Top-left of image reference point. */
-    BOTTOM_LEFT = 1 /**< Bottom-left of image reference point. */
-  };
+typedef enum reference_point
+{
+  TOP_LEFT = 0,	    /**< Top-left of image reference point. */
+  BOTTOM_LEFT = 1   /**< Bottom-left of image reference point. */
+} reference_point_t;
 
 
 /* -- STRUCTURES -- */
@@ -69,17 +65,17 @@ enum
  */
 typedef struct object
 {
-  char *name;                 /**< Descriptive name of the object
+  char *name;		      /**< Descriptive name of the object
                                  (must be unique).
                                  @todo FIXME: add code to check
                                  duplicates. */
 
   char *script_filename;      /**< Filename of the script associated with
                                  the object. */
-  
-  layer_tag_t tag;            /**< The tag on which to render. */
 
-  bool_t is_dirty;            /**< Boolean determining whether or not
+  layer_tag_t tag;	      /**< The tag on which to render. */
+
+  bool_t is_dirty;	      /**< Boolean determining whether or not
                                  the object is "dirty" (should be
                                  rendered this frame). */
 
@@ -91,38 +87,12 @@ typedef struct object
 /* -- DECLARATIONS-- */
 
 /**
- * Initialise the object base.
- */
-void
-init_objects (void);
-
-
-/**
- * Create a new object and add it to the object table.
- *
- * @param object_name      The name of the object, used to look it up
- *                         in the object table.
- * @param script_filename  The filename of the script to associate
- *                         with the object. This script's
- *                         initialisation code will be called once
- *                         the object is installed.
- *
- * @return  a pointer to the new object, or NULL if there was an
- *          error while creating it.
- */
-object_t *
-add_object (const char object_name[],
-            const char script_filename[]);
-
-
-/**
  * Change the layer tag associated with an object.
  *
  * @param object  Pointer to the object whose tag is to be changed.
  * @param tag     The tag to associate with the object.
  */
-void
-set_object_tag (object_t *object, layer_tag_t tag);
+void set_object_tag (object_t *object, layer_tag_t tag);
 
 
 /**
@@ -132,11 +102,10 @@ set_object_tag (object_t *object, layer_tag_t tag);
  *
  * @return  The object image, or NULL if an error occurred.
  */
-struct object_image *
-get_object_image (object_t *object);
+struct object_image *get_object_image (object_t *object);
 
 
-/** 
+/**
  * Change the graphic associated with an object.
  *
  * This will instantly update the object image.
@@ -162,11 +131,9 @@ get_object_image (object_t *object);
  */
 void
 set_object_image (object_t *object,
-                  const char filename[],
-                  int16_t image_x,
-                  int16_t image_y,
-                  uint16_t width,
-                  uint16_t height);
+		  const char filename[],
+		  int16_t image_x,
+		  int16_t image_y, uint16_t width, uint16_t height);
 
 
 /**
@@ -181,23 +148,19 @@ set_object_image (object_t *object,
  * actual physical "base" of the object.
  *
  * @param object     Pointer to the object to query.
- *
  * @param x_pointer  Pointer to a variable in which to store the X
  *                   co-ordinate.
- *
  * @param y_pointer  Pointer to a variable in which to store the Y
  *                   co-ordinate.
- *
  * @param reference  The reference point to use (TOP_LEFT or
  *                   BOTTOM_LEFT). In most cases, BOTTOM_LEFT is
  *                   preferred, as the bottom of the image is the
  *                   reference point for Z-order calculation.
- */ 
-void
-get_object_coordinates (object_t *object,
-                        int32_t *x_pointer,
-                        int32_t *y_pointer,
-                        reference_t reference);
+ */
+void get_object_coordinates (object_t *object,
+			     int32_t *x_pointer,
+			     int32_t *y_pointer,
+			     reference_point_t reference);
 
 
 /**
@@ -212,25 +175,20 @@ get_object_coordinates (object_t *object,
  * actual physical "base" of the object.
  *
  * @param object     Pointer to the object to modify.
- *
  * @param x          The x co-ordinate, representing the left edge of
  *                   the object, in pixels from the left edge of the
- *                   map. 
- *
+ *                   map.
  * @param y          The y co-ordinate, representing the top or
  *                   bottom edge of the object, in pixels from the
  *                   top edge of the map.
- *
  * @param reference  The reference point to use (TOP_LEFT or
  *                   BOTTOM_LEFT). In most cases, BOTTOM_LEFT is
  *                   preferred, as the bottom of the image is the
  *                   reference point for Z-order calculation.
- */ 
-void
-set_object_coordinates (object_t *object,
-                        int32_t x,
-                        int32_t y,
-                        reference_t reference);
+ */
+void set_object_coordinates (object_t *object,
+			     int32_t x, int32_t y,
+			     reference_point_t reference);
 
 
 /**
@@ -240,9 +198,7 @@ set_object_coordinates (object_t *object,
  * @param mapview  Pointer to the map view on which to render the
  *                 object.
  */
-void
-set_object_dirty (object_t *object,
-                  struct mapview *mapview);
+void set_object_dirty (object_t *object, struct mapview *mapview);
 
 
 /**
@@ -250,40 +206,7 @@ set_object_dirty (object_t *object,
  *
  * @param object  Pointer to the object to delete.
  */
-void
-free_object (void *object);
-
-
-/**
- * Remove an object from the object table.
- *
- * @param object_name  The name of the object to remove from the
- *                     table.
- *
- * @return  SUCCESS for success; FAILURE otherwise (eg if no object
- *          was deleted).
- */ 
-bool_t
-delete_object (const char object_name[]);
-
-
-/**
- * Deletes all objects in the object table.
- */
-void
-clear_objects (void);
-
-
-/**
- * Retrieve an object.
- *
- * @param object_name  The name of the object concerned. 
- *
- * @return  A pointer to the object with the given name if found, or 
- *          NULL otherwise.
- */
-object_t *
-get_object (const char object_name[]);
+void free_object (object_t *object);
 
 
 /**
@@ -295,31 +218,8 @@ get_object (const char object_name[]);
  * @param object_ptr  Pointer to the object to test.
  * @param rect_ptr    Pointer to the dirty rectangle to test.
  */
-void
-dirty_object_test (gpointer key_ptr,
-                   gpointer object_ptr,
-                   gpointer rect_ptr);
-
-
-/**
- * Apply the given function to all objects.
- *
- * @param function  Pointer to the function to apply to the
- *                  object.  The function must take the object
- *                  as first parameter followed by a void pointer for
- *                  data.
- * @param data      Void pointer to the data to pass to the function.
- */
-void
-apply_to_objects (GHFunc function,
-                  void *data);
-
-
-/**
- * Clean up the objects subsystem.
- */
-void
-cleanup_objects (void);
+void dirty_object_test (gpointer key_ptr,
+			gpointer object_ptr, gpointer rect_ptr);
 
 
 #endif /* not _OBJECT_H */

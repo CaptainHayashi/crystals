@@ -1,7 +1,7 @@
 /*
  * Crystals (working title)
  *
- * Copyright (c) 2010 Matt Windsor, Michael Walker and Alexander
+ * Copyright (c) 2010, 2011 Matt Windsor, Michael Walker and Alexander
  *                    Preisinger.
  *
  * All rights reserved.
@@ -36,40 +36,25 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** @file    src/field/mapload.h
- *  @author  Matt Windsor
- *  @brief   Declarations and constants for map loader (ported from CrystalsMapEditor).
+/**
+ * @file    src/map/maprender.h
+ * @author  Matt Windsor
+ * @brief   Public interface for the map renderer.
+ *
+ * @todo FIXME: Reduce coupling to mapview_t.
  */
 
-#ifndef _MAPLOAD_H
-#define _MAPLOAD_H
+#ifndef _MAPRENDER_H
+#define _MAPRENDER_H
 
-/* -- CONSTANTS -- */
-
-extern const char *MAGIC_HEADER;      /**< Sequence denoting the map header and also the map filetype. */
-extern const char *MAGIC_TAGS;        /**< Sequence denoting the layer tag block.                      */
-extern const char *MAGIC_VALUES;      /**< Sequence denoting the value plane block.                    */
-extern const char *MAGIC_ZONES;       /**< Sequence denoting the zone plane block.                     */
-extern const char *MAGIC_PROPERTIES;  /**< Sequence denoting the zone properties block.                */
-
-enum
-  {
-    MAP_VERSION = 1                   /**< The file format version expected. */
-  };
-
-/* -- DEFINITIONS -- */
 
 /**
- * Read a map from a file using the Crystals map format.
+ * Render the dirty tiles on a map.
  *
- * The Crystals map format is detailed in the design document,
- * "The Crystals Map Format", available with the Crystals source.
- *
- * @param path  The path to the file to open.
- *
- * @return      the new map_t, or NULL if an error occurred.
+ * @param mapview  Pointer to the map view to render.
  */
-map_t *
-load_map (const char path[]);
+void
+render_map (mapview_t *mapview);
 
-#endif /* not _MAPLOAD_H */
+
+#endif /* not _MAPRENDER_H */

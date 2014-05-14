@@ -88,11 +88,13 @@ struct state_functions
 
   /** Perform frame updates for the current state.
    *
+   *  @param useconds  Elapsed microseconds.
+   *
    *  @return  SUCCESS if no errors occurred, FAILURE otherwise.
    */
 
   void
-  (*update) (void);
+  (*update) (uint32_t useconds);
 
 
   /** Handle a dirty rectangle (eg from the user interface layer).
@@ -106,8 +108,8 @@ struct state_functions
    */
 
   void
-  (*dirty_rect) (short x, short y, 
-                 unsigned short width, unsigned short height);
+  (*dirty_rect) (int16_t x, int16_t y,
+                 uint16_t width, uint16_t height);
 };
 
 
@@ -165,10 +167,11 @@ init_state (state_t state);
 
 /**
  * Perform per-frame updates for the current state.
+ *
+ * @param useconds  Elapsed microseconds.
  */
-
 void
-state_frame_updates (void);
+state_frame_updates (uint32_t useconds);
 
 
 /** Instruct the current state to handle a dirty rectangle.
@@ -180,8 +183,8 @@ state_frame_updates (void);
  */
 
 void
-state_handle_dirty_rect (short x, short y,
-                         unsigned short width, unsigned short height);
+state_handle_dirty_rect (int16_t x, int16_t y,
+                         uint16_t width, uint16_t height);
 
 
 /**

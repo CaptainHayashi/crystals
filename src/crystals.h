@@ -1,8 +1,8 @@
 /*
  * Crystals (working title)
  *
- * Copyright (c) 2010 Matt Windsor, Michael Walker and Alexander
- * Preisinger.
+ * Copyright (c) 2010, 2011 Matt Windsor, Michael Walker and Alexander
+ *                          Preisinger.
  *
  * All rights reserved.
  *
@@ -51,12 +51,12 @@
 #include <string.h>
 #include <stdio.h>
 
-#include <glib.h>
-#include <glib-2.0/glib/gslist.h>
+#include <glib-2.0/glib.h>
 #include <glib-2.0/gmodule.h>
 
 /* Crystals headers */
 #include "types.h"
+#include "file.h"
 #include "events.h"
 #include "graphics.h"
 #include "parser.h"
@@ -65,15 +65,19 @@
 #include "optionparser.h"
 #include "state.h"
 #include "util.h"
+#include "timer.h"
 
 #include "bindings/bindings.h"
 
-#include "field/map.h"
-#include "field/mapview.h"
+#include "map/map.h"
+#include "map/mapview.h"
+#include "map/mapload.h"
+#include "map/maprender.h"
+
 #include "field/field.h"
-#include "field/mapload.h"
 #include "field/object-image.h"
 #include "field/object.h"
+#include "field/objectset.h"
 #include "field/object-api.h"
 
 #endif /* not _CRYSTALS_H */
